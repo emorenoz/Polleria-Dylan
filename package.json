@@ -20,7 +20,7 @@
     "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4",
     "@ionic/angular": "^8.0.0",
-    "zone.js": "^0.16.2"
+    "zone.js": "^0.14.10"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^17.3.17",
