@@ -1,8 +1,27 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router'; // 1. Importamos el Router para la navegación
-import { IonicModule } from '@ionic/angular';
+import { Router } from '@angular/router';
+import { ToastController } from '@ionic/angular';
+import { 
+  IonContent, 
+  IonIcon, 
+  IonGrid, 
+  IonRow, 
+  IonCol 
+} from '@ionic/angular/standalone';
+
+import { addIcons } from 'ionicons';
+import { 
+  restaurantOutline, 
+  arrowBackOutline, 
+  checkmarkCircleOutline, 
+  caretBackOutline, 
+  caretForwardOutline 
+} from 'ionicons/icons';
+
+// Inyectamos el servicio de pedidos para lograr la interacción real
+import { PedidoService } from '../../services/pedido.service';
 
 @Component({
   selector: 'app-pedido',
@@ -12,22 +31,27 @@ import { IonicModule } from '@ionic/angular';
   imports: [
     CommonModule,
     FormsModule,
-    IonicModule
+    IonContent,
+    IonIcon,
+    IonGrid,
+    IonRow,
+    IonCol
   ]
 })
 export class PedidoPage implements OnInit {
 
   categoriaSeleccionada: string = 'Pollos';
 
-  // Inicialización adaptada con el campo dirección en el cliente
+  // Estructura limpia que manipula el HTML mediante ngModel
   pedido: any = {
     cliente: {
       nombre: '',
       telefono: '',
-      direccion: '' // Añadido para soportar la opción de Delivery
+      direccion: ''
     },
     tipoEntrega: 'Recojo',
-    estado: 'Activo' // Marcamos por defecto que nace como Activo
+    items: [], // Carrito en formato de lista para el HTML
+    total: 0
   };
 
   productosBase = [
@@ -69,7 +93,7 @@ export class PedidoPage implements OnInit {
     { id: 43, categoria: 'Criollos', nombre: 'Chicharrón a lo Monstruo', precio: 16.00 },
     { id: 44, categoria: 'Criollos', nombre: 'Lomo Saltado c/ arroz', precio: 14.00 },
     { id: 45, categoria: 'Criollos', nombre: 'Lomo Saltado c/ chaufa', precio: 15.00 },
-    { id: 46, fontSize: '12px', categoria: 'Criollos', nombre: 'Lomo Montado', precio: 16.00 },
+    { id: 46, categoria: 'Criollos', nombre: 'Lomo Montado', precio: 16.00 },
     { id: 47, categoria: 'Criollos', nombre: 'Lomo a lo Pobre', precio: 17.00 },
     { id: 48, categoria: 'Criollos', nombre: 'Pollo Saltado c/ arroz', precio: 13.00 },
     { id: 49, categoria: 'Criollos', nombre: 'Pollo Saltado c/ chaufa', precio: 14.00 },
@@ -158,7 +182,7 @@ export class PedidoPage implements OnInit {
     { id: 138, categoria: 'Parrillas', nombre: 'Mostrito a lo Pobre 1/8', precio: 14.00 },
     { id: 139, categoria: 'Parrillas', nombre: 'Salchi Mostro', precio: 11.00 },
     { id: 140, categoria: 'Parrillas', nombre: 'Salchipapa Clásica', precio: 8.00 },
-    { id: 141, categoria: 'Parrillas', merge: true, nombre: 'Salchipapa Montada', precio: 9.00 },
+    { id: 141, categoria: 'Parrillas', nombre: 'Salchipapa Montada', precio: 9.00 },
     { id: 142, categoria: 'Parrillas', nombre: 'Salchipapa a lo Pobre', precio: 10.00 },
 
     // --- GUARNICIONES ---
@@ -173,13 +197,24 @@ export class PedidoPage implements OnInit {
     { id: 158, categoria: 'Guarniciones', nombre: 'Porción de Hot Dog', precio: 2.00 }
   ];
 
-  carrito: { [key: number]: number } = {};
-
-  // 2. Inyectamos el Router en el constructor
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router, 
+    private toastCtrl: ToastController,
+    private pedidoService: PedidoService
+  ) {
+    // Activamos los íconos dinámicos en el ciclo Standalone
+    addIcons({
+      'restaurant-outline': restaurantOutline,
+      'arrow-back-outline': arrowBackOutline,
+      'checkmark-circle-outline': checkmarkCircleOutline,
+      'caret-back-outline': caretBackOutline,
+      'caret-forward-outline': caretForwardOutline
+    });
+  }
 
   ngOnInit() { }
 
+  // Filtro que alimenta directamente al *ngFor del HTML
   get productosFiltrados() {
     return this.productosBase.filter(p => p.categoria === this.categoriaSeleccionada);
   }
@@ -190,73 +225,112 @@ export class PedidoPage implements OnInit {
 
   setTipoEntrega(tipo: string) {
     this.pedido.tipoEntrega = tipo;
-    // Limpieza automática si selecciona Recojo
     if (tipo === 'Recojo') {
       this.pedido.cliente.direccion = '';
     }
   }
 
+  // Busca cuántas unidades de un plato van en la lista
   obtenerCantidad(producto: any): number {
-    return this.carrito[producto.id] || 0;
+    const item = this.pedido.items.find((i: any) => i.id === producto.id);
+    return item ? item.cantidad : 0;
   }
 
+  // Agrega una unidad al carrito interno
   aumentarCantidad(producto: any) {
-    if (!this.carrito[producto.id]) {
-      this.carrito[producto.id] = 0;
+    const item = this.pedido.items.find((i: any) => i.id === producto.id);
+    if (item) {
+      item.cantidad++;
+    } else {
+      this.pedido.items.push({
+        id: producto.id,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        cantidad: 1
+      });
     }
-    this.carrito[producto.id]++;
+    this.calcularTotal();
   }
 
+  // Resta una unidad y si llega a 0, limpia el producto
   disminuirCantidad(producto: any) {
-    if (this.carrito[producto.id] && this.carrito[producto.id] > 0) {
-      this.carrito[producto.id]--;
-    }
-  }
-
-  calcularTotal(): number {
-    let total = 0;
-    for (const id in this.carrito) {
-      const prod = this.productosBase.find(p => p.id === +id);
-      if (prod) {
-        total += prod.precio * this.carrito[id];
+    const item = this.pedido.items.find((i: any) => i.id === producto.id);
+    if (item) {
+      item.cantidad--;
+      if (item.cantidad === 0) {
+        this.pedido.items = this.pedido.items.filter((i: any) => i.id !== producto.id);
       }
     }
-    return total;
+    this.calcularTotal();
+  }
+
+  calcularTotal() {
+    this.pedido.total = this.pedido.items.reduce((sum: number, i: any) => sum + (i.precio * i.cantidad), 0);
   }
 
   volver() {
-    // Redirige al panel principal o menú anterior
-    this.router.navigate(['/home']);
+    this.router.navigate(['/tabs/inicio']); // Ajustado al path común de las pestañas
   }
 
-  /**
-   * Registra el pedido, añade metadatos obligatorios y gestiona la redirección automática
-   */
-  registrarPedido() {
-    // Validaciones de seguridad indispensables
+  // Retorna un emoji divertido según la categoría de comida
+  obtenerEmoji(categoria: string): string {
+    switch (categoria) {
+      case 'Pollos': return '🍗';
+      case 'Bebidas': return '🥤';
+      case 'Chifa': return '🥢';
+      case 'Criollos': return '🍛';
+      case 'Parrillas': return '🥩';
+      default: return '🍟';
+    }
+  }
+
+  async registrarPedido() {
+    // Validaciones indispensables de seguridad
     if (!this.pedido.cliente.nombre || this.pedido.cliente.nombre.trim() === '') {
-      alert('Por favor, ingresa el nombre del cliente.');
+      this.mostrarToast('Por favor, ingresa el nombre del cliente.');
       return;
     }
 
     if (this.pedido.tipoEntrega === 'Delivery' && (!this.pedido.cliente.direccion || this.pedido.cliente.direccion.trim() === '')) {
-      alert('Por favor, ingresa una dirección válida para el Delivery.');
+      this.mostrarToast('Por favor, ingresa la dirección para el Delivery.');
       return;
     }
 
-    // Estructuramos la data completa que se guardará en la sección de activos
-    this.pedido.estado = 'Activo';
-    this.pedido.total = this.calcularTotal();
-    this.pedido.productosSeleccionados = this.carrito;
-    this.pedido.fechaRegistro = new Date().toISOString();
+    if (this.pedido.items.length === 0) {
+      this.mostrarToast('Debe agregar al menos un plato al pedido.');
+      return;
+    }
 
-    console.log('Pedido Registrado Listo para Activos:', this.pedido);
+    // Despachamos la orden estructurada al BehaviorSubject de PedidoService
+    this.pedidoService.crearPedido({
+      cliente: { ...this.pedido.cliente },
+      tipoEntrega: this.pedido.tipoEntrega,
+      estado: 'pendiente', // Sincronizado con los estados de tu DashboardService
+      items: [...this.pedido.items],
+      total: this.pedido.total,
+      fecha: new Date().toISOString()
+    });
 
-    // TODO: Aquí debes llamar a tu servicio local, Firebase o LocalStorage para guardar la orden.
-    // Ejemplo: this.pedidosService.agregarPedido(this.pedido);
+    await this.mostrarToast('¡Pedido enviado a cocina con éxito!');
+    
+    // Reseteamos el formulario limpio
+    this.pedido = {
+      cliente: { nombre: '', telefono: '', direccion: '' },
+      tipoEntrega: 'Recojo',
+      items: [],
+      total: 0
+    };
 
-    // Redirección inmediata a la pantalla de pedidos activos.
-    // NOTA: Asegúrate de reemplazar '/activos' por el path idéntico que tienes en tu 'app-routing.module.ts'
-    this.router.navigate(['/activos']);
+    // Redirección automática a la sección de órdenes en proceso
+    this.router.navigate(['/tabs/activos']);
+  }
+
+  async mostrarToast(mensaje: string) {
+    const toast = await this.toastCtrl.create({
+      message: mensaje,
+      duration: 2000,
+      position: 'bottom'
+    });
+    await toast.present();
   }
 }

@@ -1,7 +1,7 @@
 <ion-content [fullscreen]="true">
   <div class="custom-header">
     <div class="header-title-container">
-      <ion-icon name="drumstick-outline" class="chicken-icon"></ion-icon>
+      <ion-icon name="drumstick" class="chicken-icon"></ion-icon>
       <h1>Pollería Dylan Pollos, Chifa, Parrillas</h1>
     </div>
     <p>Sistema de Gestión - Comas</p>
@@ -66,14 +66,19 @@
       </ion-card-content>
     </ion-card>
 
-    <ion-card class="white-card danger-card">
+    <ion-card class="white-card logout-card">
       <ion-card-content>
-        <h3>Zona de Peligro</h3>
-        <p class="danger-desc">Eliminar todos los datos del sistema. Esta acción no se puede deshacer.</p>
-        <button class="danger-action-btn">
-          <ion-icon name="trash-outline"></ion-icon>
-          <span>Eliminar Todos los Datos</span>
-        </button>
+        <h3>Sesión de Usuario</h3>
+        <p class="logout-desc">Cierra tu sesión actual para asegurar los datos de caja del día.</p>
+        
+        <ion-button 
+          expand="block" 
+          color="danger" 
+          class="logout-action-btn" 
+          (click)="cerrarSesion()">
+          <ion-icon name="log-out-outline" slot="start"></ion-icon>
+          Cerrar Sesión
+        </ion-button>
       </ion-card-content>
     </ion-card>
   </div>

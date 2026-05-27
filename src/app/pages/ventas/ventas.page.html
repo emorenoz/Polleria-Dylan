@@ -3,7 +3,7 @@
   <div class="dashboard-header">
     <div class="header-content">
       <div class="brand-container">
-        <ion-icon name="drumstick-outline" class="logo-icon"></ion-icon>
+        <ion-icon name="restaurant-outline" class="logo-icon"></ion-icon>
         <div class="brand-text">
           <h1>Pollería Dylan Pollos, Chifa, Parrillas</h1>
           <p>Sistema de Gestión - Comas</p>
@@ -27,7 +27,7 @@
               <ion-icon name="cash-outline"></ion-icon>
               <span>Ventas Hoy</span>
             </div>
-            <div class="metric-value">S/ 62.00</div>
+            <div class="metric-value">S/ {{ (totalVentas$ | async) || 0 | number:'1.2-2' }}</div>
           </div>
         </ion-col>
 
@@ -37,7 +37,7 @@
               <ion-icon name="cart-outline"></ion-icon>
               <span>Pedidos Hoy</span>
             </div>
-            <div class="metric-value">2</div>
+            <div class="metric-value">{{ (totalPedidos$ | async) || 0 }}</div>
           </div>
         </ion-col>
       </ion-row>
@@ -49,7 +49,9 @@
               <ion-icon name="trending-up-outline"></ion-icon>
               <span>Ticket Promedio</span>
             </div>
-            <div class="metric-value">S/ 31.00</div>
+            <div class="metric-value">
+              S/ {{ (totalPedidos$ | async) ? ((totalVentas$ | async) / (totalPedidos$ | async) | number:'1.2-2') : '0.00' }}
+            </div>
           </div>
         </ion-col>
 
@@ -59,7 +61,7 @@
               <ion-icon name="people-outline"></ion-icon>
               <span>Clientes</span>
             </div>
-            <div class="metric-value">2</div>
+            <div class="metric-value">{{ (totalPedidos$ | async) || 0 }}</div>
           </div>
         </ion-col>
       </ion-row>

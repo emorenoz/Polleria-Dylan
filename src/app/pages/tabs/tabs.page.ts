@@ -37,16 +37,14 @@ import {
 export class TabsPage implements OnInit {
 
   constructor() {
-
-    // Registrar iconos
+    // CORREGIDO: Mapeamos los nombres exactos con guiones que busca tu HTML
     addIcons({
-      homeOutline,
-      cartOutline,
-      timeOutline,
-      barChartOutline,
-      settingsOutline
+      'home-outline': homeOutline,
+      'cart-outline': cartOutline,
+      'time-outline': timeOutline,
+      'bar-chart-outline': barChartOutline,
+      'settings-outline': settingsOutline
     });
-
   }
 
   ngOnInit() {}

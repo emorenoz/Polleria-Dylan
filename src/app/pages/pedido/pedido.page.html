@@ -1,7 +1,7 @@
 <div class="header-container">
   <div class="brand-bar">
     <div class="brand-title">
-      <ion-icon name="restaurant" class="brand-icon"></ion-icon>
+      <ion-icon name="restaurant-outline" class="brand-icon"></ion-icon>
       Pollería Dylan
     </div>
     <div class="brand-subtitle">Sistema de Gestión - Comas</div>
@@ -65,6 +65,9 @@
       <button [class.active]="categoriaSeleccionada === 'Chifa'" (click)="setCategoria('Chifa')" class="category-tab btn-gray">
         Chifa
       </button>
+      <button [class.active]="categoriaSeleccionada === 'Parrillas'" (click)="setCategoria('Parrillas')" class="category-tab btn-gray">
+        Parrillas
+      </button>
     </div>
 
     <div class="scroll-indicator">
@@ -78,7 +81,7 @@
         <ion-col size="6" *ngFor="let producto of productosFiltrados" class="ion-no-padding">
           <div class="product-item">
             <div class="product-icon-container">
-              <span class="food-emoji">🍗</span>
+              <span class="food-emoji">{{ obtenerEmoji(producto.categoria) }}</span>
             </div>
             <div class="product-info">
               <p class="product-name">{{ producto.nombre }}</p>

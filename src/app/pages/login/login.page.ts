@@ -28,9 +28,12 @@ import { AuthService } from '../../services/auth.service';
 })
 export class LoginPage implements OnInit {
 
+  // Variables vinculadas mediante [(ngModel)] en el HTML
   usuario = '';
   password = '';
-  errorMensaje = '';
+  
+  // Corregido: Inicializado en null para garantizar que el @if del HTML funcione a la perfección
+  errorMensaje: string | null = null;
 
   constructor(
     private router: Router,
@@ -40,13 +43,21 @@ export class LoginPage implements OnInit {
   ngOnInit(): void {}
 
   ingresar(): void {
+    // Validación previa: Si los campos están vacíos ni siquiera consultamos al servicio
+    if (!this.usuario.trim() || !this.password.trim()) {
+      this.errorMensaje = 'Por favor, complete todos los campos.';
+      return;
+    }
 
+    // Ejecutamos la autenticación mediante el servicio central
     const ok = this.authService.login(this.usuario, this.password);
 
     if (ok) {
-      this.errorMensaje = '';
+      this.errorMensaje = null;
+      // Redirección limpia hacia el menú de inicio de las pestañas
       this.router.navigateByUrl('/tabs/inicio');
     } else {
+      // Se gatilla el bloque @if del HTML mostrando el mensaje en pantalla
       this.errorMensaje = 'Usuario o contraseña incorrectos';
     }
   }

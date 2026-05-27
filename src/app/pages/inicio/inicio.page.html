@@ -15,7 +15,7 @@
     <ion-card class="white-card summary-card">
       <ion-card-content>
         <h2>Resumen de Hoy</h2>
-        <p class="current-date">viernes, 17 de abril de 2026</p>
+        <p class="current-date">{{ fechaActual }}</p>
       </ion-card-content>
     </ion-card>
 
@@ -27,8 +27,8 @@
               <ion-icon name="cash-outline"></ion-icon>
               <span>Ventas Hoy</span>
             </div>
-            <div class="metric-value">S/ 62.00</div>
-            <div class="metric-sub">2 pedidos</div>
+            <div class="metric-value">S/ {{ ventasHoy.toFixed(2) }}</div>
+            <div class="metric-sub">{{ cantidadPedidosHoy }} pedidos</div>
           </div>
         </ion-col>
 
@@ -38,7 +38,7 @@
               <ion-icon name="cube-outline"></ion-icon>
               <span>Activos</span>
             </div>
-            <div class="metric-value">0</div>
+            <div class="metric-value">{{ pedidosActivos }}</div>
             <div class="metric-sub">en proceso</div>
           </div>
         </ion-col>
@@ -51,7 +51,7 @@
               <ion-icon name="trending-up-outline"></ion-icon>
               <span>Total Pedidos</span>
             </div>
-            <div class="metric-value">2</div>
+            <div class="metric-value">{{ totalHistorico }}</div>
             <div class="metric-sub">histórico</div>
           </div>
         </ion-col>
@@ -62,7 +62,7 @@
               <ion-icon name="alert-circle-outline"></ion-icon>
               <span>Pendientes</span>
             </div>
-            <div class="metric-value">0</div>
+            <div class="metric-value">{{ pedidosPendientes }}</div>
             <div class="metric-sub">por atender</div>
           </div>
         </ion-col>
@@ -98,17 +98,29 @@
       <ion-card-content>
         <h2>Últimos Pedidos</h2>
 
-        <div class="order-item">
+        <div class="order-item" *ngFor="let p of ultimosPedidos">
           <div class="order-info">
-            <span class="customer-name">Juan Pérez</span>
-            <span class="customer-phone">987654321</span>
-            <span class="order-details">2 productos • Delivery</span>
+            <span class="customer-name">{{ p.cliente?.nombre || 'Cliente Anónimo' }}</span>
+            <span class="customer-phone">{{ p.cliente?.telefono || 'Sin teléfono' }}</span>
+            <span class="order-details">{{ obtenerTextoProductos(p.items) }} • {{ p.tipoEntrega }}</span>
           </div>
           <div class="order-status-price">
-            <span class="order-price">S/ 44.00</span>
-            <span class="status-badge bg-badge-gray">Entregado</span>
+            <span class="order-price">S/ {{ p.total.toFixed(2) }}</span>
+            <span class="status-badge" 
+                  [ngClass]="{
+                    'bg-badge-gray': p.estado === 'completado' || p.estado === 'Entregado', 
+                    'bg-orange': p.estado === 'pendiente' || p.estado === 'Activo',
+                    'bg-blue': p.estado === 'en_proceso'
+                  }">
+              {{ p.estado }}
+            </span>
           </div>
         </div>
+
+        <div *ngIf="ultimosPedidos.length === 0" class="ion-text-center ion-padding">
+          <p style="color: #a0a0a0; font-size: 14px; margin: 10px 0 0 0;">No hay pedidos registrados hoy.</p>
+        </div>
+
       </ion-card-content>
     </ion-card>
 

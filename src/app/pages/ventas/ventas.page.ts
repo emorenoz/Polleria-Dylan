@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent,
@@ -11,10 +11,12 @@ import {
 } from '@ionic/angular/standalone';
 
 import { addIcons } from 'ionicons';
-// Cambiamos drumstickOutline por restaurantOutline
+// Importación limpia de los iconos necesarios en la vista
 import { restaurantOutline, cashOutline, cartOutline, trendingUpOutline, peopleOutline } from 'ionicons/icons';
 
-import { VentaService } from '../../services/venta.service';
+// Inyección del servicio de analítica del sistema web
+import { DashboardService } from '../../services/dashboard.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-ventas',
@@ -32,16 +34,28 @@ import { VentaService } from '../../services/venta.service';
     IonCardContent
   ]
 })
-export class VentasPage {
+export class VentasPage implements OnInit {
 
-  constructor(private ventaService: VentaService) {
+  // Definición de las variables reactivas que controlarán los paneles numéricos
+  totalVentas$: Observable<number>;
+  totalPedidos$: Observable<number>;
+
+  constructor(private dashboardService: DashboardService) {
+    // Inicialización del diccionario de iconos de Ionic Standalone
     addIcons({
-      'restaurant-outline': restaurantOutline, // Ajustado aquí también
+      'restaurant-outline': restaurantOutline,
       'cash-outline': cashOutline,
       'cart-outline': cartOutline,
       'trending-up-outline': trendingUpOutline,
       'people-outline': peopleOutline
     });
+
+    // Enlazamos las variables con los observables procesados en el servicio
+    this.totalVentas$ = this.dashboardService.totalVentas();
+    this.totalPedidos$ = this.dashboardService.totalPedidos();
+  }
+
+  ngOnInit() {
   }
 
 }
