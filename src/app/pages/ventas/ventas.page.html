@@ -50,7 +50,11 @@
               <span>Ticket Promedio</span>
             </div>
             <div class="metric-value">
-              S/ {{ (totalPedidos$ | async) ? ((totalVentas$ | async) / (totalPedidos$ | async) | number:'1.2-2') : '0.00' }}
+              @if ({ v: totalVentas$ | async, p: totalPedidos$ | async }; as data) {
+                {{ (data.v && data.p) ? (data.v / data.p | number:'1.2-2') : '0.00' }}
+              } @else {
+                0.00
+              }
             </div>
           </div>
         </ion-col>
